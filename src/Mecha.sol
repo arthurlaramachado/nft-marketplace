@@ -264,9 +264,55 @@ contract Mecha is
         _transfer(_from, _to, _tokenId);
     }
 
-    function approve(address _approved, uint256 _tokenId) external payable;
-    function setApprovalForAll(address _operator, bool _approved) external;
-    function getApproved(uint256 _tokenId) external view returns (address);
-    function isApprovedForAll(address _owner, address _operator) external view returns (bool);
+    /**
+    * @notice The zero address indicates there is no approved address. Throws unless `msg.sender` is
+    * the current NFT owner, or an authorized operator of the current owner.
+    * @dev Set or reaffirm the approved address for an NFT. This function can be changed to payable.
+    * @param _approved The new approved NFT controller.
+    * @param _tokenId The NFT to approve.
+    */
+    function approve(address _approved, uint256 _tokenId) external {
+        address _owner = idToOwner[_tokenId];
+        require(
+            msg.sender == _owner
+            || ownerToOperators[_owner][msg.sender],
+            "Sender not allowed to perform this action"
+        );
 
+        idToApproval[_tokenId] = _approved;
+
+        emit Approval(_owner, _approved, _tokenId);
+    }
+
+    /**
+    * @notice The contract MUST allow multiple operators per owner.
+    * @dev Enables or disables approval for a third party ("operator") to manage all of
+    * `msg.sender`'s assets. It also emits the ApprovalForAll event.
+    * @param _operator Address to add to the set of authorized operators.
+    * @param _approved True if the operators is approved, false to revoke approval.
+    */
+    function setApprovalForAll(address _operator, bool _approved) external {
+        ownerToOperators[msg.sender][_operator] = _approved;
+        emit ApprovalForAll(msg.sender, _operator, _approved);
+    }
+    
+    /**
+    * @notice Throws if `_tokenId` is not a valid NFT.
+    * @dev Get the approved address for a single NFT.
+    * @param _tokenId The NFT to find the approved address for.
+    * @return Address that _tokenId is approved for.
+    */
+    function getApproved(uint256 _tokenId) external view validNFToken(_tokenId) returns (address) {
+        return idToApproval[_tokenId];
+    }
+
+    /**
+    * @dev Checks if `_operator` is an approved operator for `_owner`.
+    * @param _owner The address that owns the NFTs.
+    * @param _operator The address that acts on behalf of the owner.
+    * @return True if approved for all, false otherwise.
+    */
+    function isApprovedForAll(address _owner, address _operator) external view returns (bool) {
+        return ownerToOperators[_owner][_operator];
+    }
 }

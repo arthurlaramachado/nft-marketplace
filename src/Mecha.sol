@@ -17,6 +17,9 @@ contract Mecha is
     ERC721,
     SupportsInterface
 {
+    string public name = "Mecha";
+    string public symbol = "MCH";
+
     /**
     * @dev Magic value of a smart contract that can receive NFT.
     * Equal to: bytes4(keccak256("onERC721Received(address,address,uint256,bytes)")).

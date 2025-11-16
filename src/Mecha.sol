@@ -94,6 +94,22 @@ contract Mecha is
         bool _approved
     );
 
+    /// @notice Emitted when a new Mecha NFT is created
+    /// @param minter Address that minted the NFT
+    /// @param tokenId ID of the minted token
+    /// @param strength The strenght atribute value
+    /// @param health The health atribute value
+    /// @param speed The speed atribute value
+    /// @param mintPrice Current price of the NFT when minted
+    event MechaMinted(
+        address indexed minter,
+        uint256 indexed tokenId,
+        uint8 strength,
+        uint8 health,
+        uint8 speed,
+        uint256 mintPrice
+    );
+
     error InvalidNewOwner(address invalidNewOwner);
     error InvalidAddress(address invalidAddress);
     error InvalidOwner(address invalidOwner);
@@ -320,5 +336,71 @@ contract Mecha is
     */
     function isApprovedForAll(address _owner, address _operator) external view returns (bool) {
         return ownerToOperators[_owner][_operator];
+    }
+
+    /// @dev WARNING: Uses pseudo-randomness. NOT secure for production. For learning purposes only
+    ///      Miners can manipulate. Replace with Chainlink VRF before mainnet.
+    function _generateRandomNumber(uint256 tokenId, string calldata trait) private pure returns (uint8) {
+        uint256 randomHash = uint256(keccak256(abi.encodePacked(
+            block.timestamp,
+            msg.sender,
+            tokenId,
+            trait
+        )));
+        
+        return uint8((randomHash % 99) + 1);  // 1-99
+    }
+
+    /**
+    * @notice Function that mints new NFTs at MINT_PRICE
+    * @return tokenId The id of the recently created token
+    */
+    function mint() external payable returns (uint256 tokenId) {
+        require(msg.value == MINT_PRICE, "Invalid amount of ether");
+
+        tokenId = _nextTokenId;
+        MechaAttributes memory attributes = MechaAttributes({
+            strength: _generateRandomNumber(tokenId, "strength"),
+            health: _generateRandomNumber(tokenId, "health"),
+            speed: _generateRandomNumber(tokenId, "speed")
+        });
+
+        idToOwner[tokenId] = msg.sender;
+        ownerToNFTokenCount[msg.sender] += 1;
+        idToAttributes[tokenId] = attributes;
+        
+        _nextTokenId += 1;
+
+        emit Transfer(address(0), msg.sender, tokenId);
+        emit MechaMinted(msg.sender, tokenId, attributes.strength, attributes.health, attributes.speed, MINT_PRICE);
+    }
+
+    /** @notice Permanently destroys a Mecha NFT
+    *   @dev Burns the token by transferring to address(0). Only the owner can burn.
+    *      Emits Transfer event. Attributes are preserved for historical data.
+    *   @param tokenId The ID of the Mecha to burn
+    */
+    function burn(uint256 tokenId) external {
+        address owner = idToOwner[tokenId];
+
+        require(owner != address(0), "Token doesn't exist");
+        require(msg.sender == owner, "Not owner");
+        
+        delete idToOwner[tokenId];
+        ownerToNFTokenCount[owner] -= 1;
+        delete idToApproval[tokenId];
+        delete idToAttributes[tokenId];
+        
+        emit Transfer(owner, address(0), tokenId);
+    }
+
+    /** @notice Get the attributes of a Mecha
+    *   @dev Returns attributes for any not burned tokenId
+    *        Does not validate if token exists
+    *   @param tokenId The ID of the Mecha to query
+    *   @return attributes The Mecha's strength, health, and speed attributes
+    */
+    function getAttributes(uint256 tokenId) external view returns (MechaAttributes memory) {
+        return idToAttributes[tokenId];
     }
 }

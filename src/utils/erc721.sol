@@ -3,7 +3,8 @@ pragma solidity ^0.8.0;
 
 /**
  * @dev ERC-721 non-fungible token standard.
- * See https://github.com/ethereum/ercs/blob/master/ERCS/erc-721.md.
+ * See https://github.com/ethereum/ercs/blob/master/ERCS/erc-721.md;
+ *     https://eips.ethereum.org/EIPS/eip-721#simple-summary.
  */
 interface ERC721
 {

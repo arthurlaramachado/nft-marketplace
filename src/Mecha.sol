@@ -170,10 +170,10 @@ contract Mecha is
     {
         _transfer(_from, _to, _tokenId);
 
-        if (_to.isContract())
+        if (_to.code.length > 0)
         {
             bytes4 retval = ERC721TokenReceiver(_to).onERC721Received(msg.sender, _from, _tokenId, _data);
-            require(retval == MAGIC_ON_ERC721_RECEIVED, NOT_ABLE_TO_RECEIVE_NFT);
+            require(retval == MAGIC_ON_ERC721_RECEIVED, "Unable to receive NFT");
         }
     }
 
@@ -195,7 +195,7 @@ contract Mecha is
     */
     function ownerOf(uint256 _tokenId) external view returns (address _owner) {
         _owner = idToOwner[_tokenId];
-        if(_owner != address(0)) revert InvalidOwner(_owner);
+        if(_owner == address(0)) revert InvalidOwner(_owner);
     }
 
     /**
@@ -215,10 +215,11 @@ contract Mecha is
         address _from, 
         address _to, 
         uint256 _tokenId, 
-        bytes data
+        bytes memory data
     ) 
         external
         override
+        payable
     {
         _safeTransferFrom(_from, _to, _tokenId, data);
     }
@@ -238,6 +239,7 @@ contract Mecha is
     ) 
         external
         override
+        payable
     {
         _safeTransferFrom(_from, _to, _tokenId, "");
     }
@@ -257,9 +259,8 @@ contract Mecha is
         address _to, 
         uint256 _tokenId
     ) 
-        external 
-        canTransfer(_tokenId) 
-        validNFToken(_tokenId) 
+        external
+        payable 
     {
         _transfer(_from, _to, _tokenId);
     }
@@ -271,8 +272,9 @@ contract Mecha is
     * @param _approved The new approved NFT controller.
     * @param _tokenId The NFT to approve.
     */
-    function approve(address _approved, uint256 _tokenId) external {
+    function approve(address _approved, uint256 _tokenId) external validNFToken(_tokenId) {
         address _owner = idToOwner[_tokenId];
+        require(_approved != _owner, "Approval to current owner");
         require(
             msg.sender == _owner
             || ownerToOperators[_owner][msg.sender],
@@ -292,6 +294,7 @@ contract Mecha is
     * @param _approved True if the operators is approved, false to revoke approval.
     */
     function setApprovalForAll(address _operator, bool _approved) external {
+        require(_operator != msg.sender, "Cannot approve self");
         ownerToOperators[msg.sender][_operator] = _approved;
         emit ApprovalForAll(msg.sender, _operator, _approved);
     }

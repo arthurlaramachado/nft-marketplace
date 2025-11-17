@@ -38,6 +38,7 @@ contract Mecha is
     }
 
     uint256 private _nextTokenId = 1;
+    uint256 private _activeTokens = 0;
     uint256 public constant MINT_PRICE = 0.001 ether;
 
     /// @dev A mapping from NFT ID to the address that owns it.
@@ -346,6 +347,7 @@ contract Mecha is
         idToAttributes[tokenId] = attributes;
         
         _nextTokenId += 1;
+        _activeTokens += 1;
 
         emit Transfer(address(0), msg.sender, tokenId);
         emit MechaMinted(msg.sender, tokenId, attributes.strength, attributes.health, attributes.speed, MINT_PRICE);
@@ -366,6 +368,8 @@ contract Mecha is
         ownerToNfTokenCount[owner] -= 1;
         delete idToApproval[tokenId];
         delete idToAttributes[tokenId];
+
+        _activeTokens -= 1;
         
         emit Transfer(owner, address(0), tokenId);
     }
@@ -378,5 +382,9 @@ contract Mecha is
     */
     function getAttributes(uint256 tokenId) external view returns (MechaAttributes memory) {
         return idToAttributes[tokenId];
+    }
+
+    function getActiveTokens() external view returns (uint256) {
+        return _activeTokens;
     }
 }

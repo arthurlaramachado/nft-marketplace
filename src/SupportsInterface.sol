@@ -7,7 +7,7 @@ contract SupportsInterface is ERC165 {
     /// @dev Mapping to supported interfaces. Do not set 0xffffffff to true
     mapping(bytes4 => bool) supportedInterfaces;
 
-    constructor () {
+    constructor() {
         /// @dev 0x01ffc9a7 = ERC165
         supportedInterfaces[0x01ffc9a7] = true;
     }
@@ -16,7 +16,7 @@ contract SupportsInterface is ERC165 {
     /// @param _interfaceId Id of the interface.
     /// @return True if _interfaceId is supported and not 0xffffffff, false otherwise.
     function supportsInterface(bytes4 _interfaceId) external view returns (bool) {
-        require (_interfaceId != 0xffffffff);
+        require(_interfaceId != 0xffffffff);
         return supportedInterfaces[_interfaceId];
     }
 }

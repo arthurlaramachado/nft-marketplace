@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 /**
-*   References
-*        https://eips.ethereum.org/EIPS/eip-165
-*        https://github.com/ethereum/ercs/blob/master/ERCS/erc-721.md
-*/
+ *   References
+ *        https://eips.ethereum.org/EIPS/eip-165
+ *        https://github.com/ethereum/ercs/blob/master/ERCS/erc-721.md
+ */
 pragma solidity ^0.8.0;
 
-/// @dev Interface that implements the ERC165 standard 
+/// @dev Interface that implements the ERC165 standard
 interface ERC165 {
     /// @notice Query if a contract implements an interface
     /// @param _interfaceId The interface identifier, as specified in ERC-165

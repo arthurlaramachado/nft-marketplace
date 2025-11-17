@@ -18,7 +18,7 @@ contract MechaMintingTest is MechaTest {
         assertEq(mecha.ownerOf(tokenId), user1);
         assertEq(mecha.balanceOf(user1), 1);
     }
-    
+
     function testMintHigherAmountRevert() public {
         vm.prank(user1);
         vm.expectRevert("Invalid amount of ether");
@@ -29,7 +29,7 @@ contract MechaMintingTest is MechaTest {
     function testMintLowerAmountRevert() public {
         vm.prank(user1);
         vm.expectRevert("Invalid amount of ether");
-        
+
         _mint(0);
     }
 
@@ -103,7 +103,7 @@ contract MechaMintingTest is MechaTest {
         uint256 numOfUser1Tokens = mecha.balanceOf(user1);
         uint256 numOfUser2Tokens = mecha.balanceOf(user2);
         uint256 numOfTotalTokens = mecha.getActiveTokens();
-        
+
         assertEq(numOfUser1Tokens, 2);
         assertEq(numOfUser2Tokens, 1);
         assertEq(numOfTotalTokens, 3);

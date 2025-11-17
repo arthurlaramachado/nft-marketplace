@@ -8,38 +8,37 @@ pragma solidity ^0.8.0;
  */
 interface ERC721
 {
-
-  /**
-   * @dev Emits when ownership of any NFT changes by any mechanism. This event emits when NFTs are
-   * created (`from` == 0) and destroyed (`to` == 0). Exception: during contract creation, any
-   * number of NFTs may be created and assigned without emitting Transfer. At the time of any
-   * transfer, the approved address for that NFT (if any) is reset to none.
-   */
+  /// @notice Emitted when ownership of an NFT changes
+  /// @dev Required by the ERC-721 specification.
+  /// @param _from Source address (address(0) if minting)
+  /// @param _to Destination address (address(0) if burning)
+  /// @param _tokenId ID of the transferred token
   event Transfer(
-    address indexed _from,
-    address indexed _to,
-    uint256 indexed _tokenId
+      address indexed _from, 
+      address indexed _to, 
+      uint256 indexed _tokenId
   );
 
-  /**
-   * @dev This emits when the approved address for an NFT is changed or reaffirmed. The zero
-   * address indicates there is no approved address. When a Transfer event emits, this also
-   * indicates that the approved address for that NFT (if any) is reset to none.
-   */
+  /// @notice Emitted when an address is granted permission to operate a specific NFT
+  /// @dev Required by the ERC-721 specification.
+  /// @param _owner Current owner of the NFT
+  /// @param _approved Address that received approval (or address(0) to remove)
+  /// @param _tokenId ID of the approved token
   event Approval(
-    address indexed _owner,
-    address indexed _approved,
-    uint256 indexed _tokenId
+      address indexed _owner, 
+      address indexed _approved, 
+      uint256 indexed _tokenId
   );
 
-  /**
-   * @dev This emits when an operator is enabled or disabled for an owner. The operator can manage
-   * all NFTs of the owner.
-   */
+  /// @notice Emitted when an operator is approved or unapproved to manage all NFTs of an owner
+  /// @dev Required by the ERC-721 specification.
+  /// @param _owner Owner of the NFTs
+  /// @param _operator Address of the operator
+  /// @param _approved True to grant permission, false to revoke
   event ApprovalForAll(
-    address indexed _owner,
-    address indexed _operator,
-    bool _approved
+      address indexed _owner, 
+      address indexed _operator, 
+      bool _approved
   );
 
   /**

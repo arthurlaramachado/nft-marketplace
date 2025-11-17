@@ -47,7 +47,7 @@ contract Mecha is
     mapping (uint256 => address) internal idToApproval;
 
     /// @dev Mapping from owner address to count of their tokens.
-    mapping (address => uint256) private ownerToNFTokenCount;
+    mapping (address => uint256) private ownerToNfTokenCount;
 
     /// @dev Mapping from owner address to mapping of operator addresses.
     mapping (address => mapping (address => bool)) internal ownerToOperators;
@@ -60,39 +60,6 @@ contract Mecha is
         /// 0x80ac58cd = ERC721
         supportedInterfaces[0x80ac58cd] = true;
     }
-
-    /// @notice Emitted when ownership of an NFT changes
-    /// @dev Required by the ERC-721 specification.
-    /// @param _from Source address (address(0) if minting)
-    /// @param _to Destination address (address(0) if burning)
-    /// @param _tokenId ID of the transferred token
-    event Transfer(
-        address indexed _from, 
-        address indexed _to, 
-        uint256 indexed _tokenId
-    );
-
-    /// @notice Emitted when an address is granted permission to operate a specific NFT
-    /// @dev Required by the ERC-721 specification.
-    /// @param _owner Current owner of the NFT
-    /// @param _approved Address that received approval (or address(0) to remove)
-    /// @param _tokenId ID of the approved token
-    event Approval(
-        address indexed _owner, 
-        address indexed _approved, 
-        uint256 indexed _tokenId
-    );
-
-    /// @notice Emitted when an operator is approved or unapproved to manage all NFTs of an owner
-    /// @dev Required by the ERC-721 specification.
-    /// @param _owner Owner of the NFTs
-    /// @param _operator Address of the operator
-    /// @param _approved True to grant permission, false to revoke
-    event ApprovalForAll(
-        address indexed _owner, 
-        address indexed _operator, 
-        bool _approved
-    );
 
     /// @notice Emitted when a new Mecha NFT is created
     /// @param minter Address that minted the NFT
@@ -119,13 +86,7 @@ contract Mecha is
     * @param _tokenId ID of the NFT to transfer.
     */
     modifier canTransfer(uint256 _tokenId) {
-        address _owner = idToOwner[_tokenId];
-        require(
-            msg.sender == _owner
-            || msg.sender == idToApproval[_tokenId]
-            || ownerToOperators[_owner][msg.sender],
-            "Not owner, approved or operator"
-        );
+        _canTransfer(_tokenId);
         _;
     }
 
@@ -133,9 +94,26 @@ contract Mecha is
     * @dev Guarantees that _tokenId is a valid Token.
     * @param _tokenId ID of the NFT to validate.
     */
-    modifier validNFToken(uint256 _tokenId) {
-        require(idToOwner[_tokenId] != address(0), "NFT no valid");
+    modifier validNfToken(uint256 _tokenId) {
+        _validNfToken(_tokenId);
         _;
+    }
+
+    function _validNfToken(uint256 _tokenId) internal view {
+        require(idToOwner[_tokenId] != address(0), "NFT no valid");
+    }
+
+    /**
+    * @dev Codesize optimization hence modifier can be used in more than one place 
+    */
+    function _canTransfer(uint256 _tokenId) internal view {
+        address _owner = idToOwner[_tokenId];
+        require(
+            msg.sender == _owner
+            || msg.sender == idToApproval[_tokenId]
+            || ownerToOperators[_owner][msg.sender],
+            "Not owner, approved or operator"
+        );
     }
 
     /**
@@ -154,7 +132,7 @@ contract Mecha is
     ) 
         private
         canTransfer(_tokenId)
-        validNFToken(_tokenId) 
+        validNfToken(_tokenId) 
     {
         address _owner = idToOwner[_tokenId];
         if (_from != _owner) revert InvalidOwner(_owner);
@@ -164,8 +142,8 @@ contract Mecha is
         idToOwner[_tokenId] = _to;
         
         // updates ntf counters
-        ownerToNFTokenCount[_from] -= 1;
-        ownerToNFTokenCount[_to] += 1;
+        ownerToNfTokenCount[_from] -= 1;
+        ownerToNfTokenCount[_to] += 1;
 
         delete idToApproval[_tokenId];
 
@@ -204,13 +182,14 @@ contract Mecha is
     */
     function balanceOf(address _owner) external view returns (uint256) {
         if (_owner == address(0)) revert InvalidAddress(_owner);
-        return ownerToNFTokenCount[_owner];
+        return ownerToNfTokenCount[_owner];
     }
 
     /**
-    * @dev Get the address of a token's owner
+    * @notice Find the owner of an NFT
+    * @dev Reverts if token doesn't exist (owner is address(0))
     * @param _tokenId The token Id
-    * @return address Token owner address
+    * @return _owner Token owner address
     */
     function ownerOf(uint256 _tokenId) external view returns (address _owner) {
         _owner = idToOwner[_tokenId];
@@ -218,29 +197,28 @@ contract Mecha is
     }
 
     /**
-   * @notice Throws unless `msg.sender` is the current owner, an authorized operator, or the
-   * approved address for this NFT. Throws if `_from` is not the current owner. Throws if `_to` is
-   * the zero address. Throws if `_tokenId` is not a valid NFT. When transfer is complete, this
-   * function checks if `_to` is a smart contract (code size > 0). If so, it calls
-   * `onERC721Received` on `_to` and throws if the return value is not
-   * `bytes4(keccak256("onERC721Received(address,uint256,bytes)"))`.
-   * @dev Transfers the ownership of an NFT from one address to another address.
-   * @param _from The current owner of the NFT.
-   * @param _to The new owner.
-   * @param _tokenId The NFT to transfer.
-   * @param _data Additional data with no specified format, sent in call to `_to`.
-   */
+    * @notice Throws unless `msg.sender` is the current owner, an authorized operator, or the
+    * approved address for this NFT. Throws if `_from` is not the current owner. Throws if `_to` is
+    * the zero address. Throws if `_tokenId` is not a valid NFT. When transfer is complete, this
+    * function checks if `_to` is a smart contract (code size > 0). If so, it calls
+    * `onERC721Received` on `_to` and throws if the return value is not
+    * `bytes4(keccak256("onERC721Received(address,uint256,bytes)"))`.
+    * @dev Transfers the ownership of an NFT from one address to another address.
+    * @param _from The current owner of the NFT.
+    * @param _to The new owner.
+    * @param _tokenId The NFT to transfer.
+    * @param _data Additional data with no specified format, sent in call to `_to`.
+    */
     function safeTransferFrom(
         address _from, 
         address _to, 
         uint256 _tokenId, 
-        bytes memory data
+        bytes memory _data
     ) 
         external
         override
-        payable
     {
-        _safeTransferFrom(_from, _to, _tokenId, data);
+        _safeTransferFrom(_from, _to, _tokenId, _data);
     }
 
     /**
@@ -258,7 +236,6 @@ contract Mecha is
     ) 
         external
         override
-        payable
     {
         _safeTransferFrom(_from, _to, _tokenId, "");
     }
@@ -279,7 +256,6 @@ contract Mecha is
         uint256 _tokenId
     ) 
         external
-        payable 
     {
         _transfer(_from, _to, _tokenId);
     }
@@ -291,7 +267,7 @@ contract Mecha is
     * @param _approved The new approved NFT controller.
     * @param _tokenId The NFT to approve.
     */
-    function approve(address _approved, uint256 _tokenId) external validNFToken(_tokenId) {
+    function approve(address _approved, uint256 _tokenId) external validNfToken(_tokenId) {
         address _owner = idToOwner[_tokenId];
         require(_approved != _owner, "Approval to current owner");
         require(
@@ -324,7 +300,7 @@ contract Mecha is
     * @param _tokenId The NFT to find the approved address for.
     * @return Address that _tokenId is approved for.
     */
-    function getApproved(uint256 _tokenId) external view validNFToken(_tokenId) returns (address) {
+    function getApproved(uint256 _tokenId) external view validNfToken(_tokenId) returns (address) {
         return idToApproval[_tokenId];
     }
 
@@ -340,7 +316,7 @@ contract Mecha is
 
     /// @dev WARNING: Uses pseudo-randomness. NOT secure for production. For learning purposes only
     ///      Miners can manipulate. Replace with Chainlink VRF before mainnet.
-    function _generateRandomNumber(uint256 tokenId, string calldata trait) private pure returns (uint8) {
+    function _generateRandomNumber(uint256 tokenId, string memory trait) private view returns (uint8) {
         uint256 randomHash = uint256(keccak256(abi.encodePacked(
             block.timestamp,
             msg.sender,
@@ -366,7 +342,7 @@ contract Mecha is
         });
 
         idToOwner[tokenId] = msg.sender;
-        ownerToNFTokenCount[msg.sender] += 1;
+        ownerToNfTokenCount[msg.sender] += 1;
         idToAttributes[tokenId] = attributes;
         
         _nextTokenId += 1;
@@ -387,7 +363,7 @@ contract Mecha is
         require(msg.sender == owner, "Not owner");
         
         delete idToOwner[tokenId];
-        ownerToNFTokenCount[owner] -= 1;
+        ownerToNfTokenCount[owner] -= 1;
         delete idToApproval[tokenId];
         delete idToAttributes[tokenId];
         

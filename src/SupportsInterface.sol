@@ -13,10 +13,10 @@ contract SupportsInterface is ERC165 {
     }
 
     /// @dev Function to check which interfaces are suported by this contract.
-    /// @param _interfaceID Id of the interface.
-    /// @return True if _interfaceID is supported and not 0xffffffff, false otherwise.
-    function supportsInterface(bytes4 _interfaceID) external view returns (bool) {
-        require (_interfaceID != 0xffffffff);
-        returns supportedInterfaces[_interfaceID];
+    /// @param _interfaceId Id of the interface.
+    /// @return True if _interfaceId is supported and not 0xffffffff, false otherwise.
+    function supportsInterface(bytes4 _interfaceId) external view returns (bool) {
+        require (_interfaceId != 0xffffffff);
+        return supportedInterfaces[_interfaceId];
     }
 }

@@ -78,6 +78,7 @@ contract Mecha is
         uint256 mintPrice
     );
 
+    error InvalidTransfer(address from, address to);
     error InvalidNewOwner(address invalidNewOwner);
     error InvalidAddress(address invalidAddress);
     error InvalidOwner(address invalidOwner);
@@ -138,6 +139,7 @@ contract Mecha is
         address _owner = idToOwner[_tokenId];
         if (_from != _owner) revert InvalidOwner(_owner);
         if (_to == address(0)) revert InvalidNewOwner(_to);
+        if (_from == _to) revert InvalidTransfer(_from, _to);
         
         // updates ownership
         idToOwner[_tokenId] = _to;
